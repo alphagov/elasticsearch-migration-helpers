@@ -29,6 +29,14 @@ Assumes the target indicies have already been created, with appropriate ES5 mapp
 Uses example indicies and doc types from the GOV.UK Search API:
 https://github.com/alphagov/rummager/tree/master/config/schema/indexes 
 
+### Backup and restore for ES5
+
+Run with:
+
+    (venv)$ python scripts/backup_and_restore.py [--backup] [--restore]
+
+A work-in-progress script that uses Elasticsearch's built-in snapshot feature to save backups to an ES data folder.
+
 ## Setting up local Elasticsearch instances
 
 If you want to test the scripts locally, you'll need an ES2 and and ES5 instance.
