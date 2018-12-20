@@ -7,7 +7,7 @@ In theory this should work when restoring an ES2 snapshot to an ES5 cluster.
 """
 import argparse
 from datetime import datetime
-import time
+
 
 from elasticsearch5.client import Elasticsearch as Elasticsearch5, TransportError as TransportError5
 

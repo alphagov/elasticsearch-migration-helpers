@@ -33,7 +33,7 @@ https://github.com/alphagov/rummager/tree/master/config/schema/indexes
 
 Run with:
 
-    (venv)$ python scripts/backup_and_restore.py [--backup] [--restore]
+    (venv)$ python scripts/backup_and_restore.py [--create] [--restore]
 
 A work-in-progress script that uses Elasticsearch's built-in snapshot feature to save backups to an ES data folder.
 
