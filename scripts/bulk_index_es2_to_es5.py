@@ -23,7 +23,6 @@ INDICES = [
     'govuk',
     'government',
     'detailed',
-    'govuk',
 ]
 DOC_TYPES = [
     'aaib_report',
