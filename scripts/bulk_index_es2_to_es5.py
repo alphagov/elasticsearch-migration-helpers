@@ -167,17 +167,19 @@ def copy_index(index_name_from, index_name_to, bulk_index=True):
 
 def main():
     """
-    Bulk copy documents as-is from one index to another 'new' index.
+    Bulk copy documents as-is from one index to the new index created by rummager.
 
     Assumes the target index has already been created with an appropriate mapping.
     # TODO: create target index if it doesn't exist
 
     Aliases/index names are treated the same.
-    # TODO: swap alias to point to 'new' index after successful creation
     :return:
     """
-    indices = [(index, "{}-new".format(index)) for index in INDICES
-    ]
+    indices = []
+    try:
+        indices = [(index, es_client5.indices.get_alias("{}-*".format(index)).keys()[0]) for index in INDICES]
+    except KeyError as err:
+        print("Index does not exist in ES5 target host: {}".format(index))
     for index_name_from, index_name_to in indices:
         copy_index(index_name_from, index_name_to)
 
