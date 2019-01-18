@@ -18,7 +18,7 @@ from six import iteritems
 # https://github.com/alphagov/rummager/tree/master/config/schema/indexes
 
 INDICES = [
-    'page-traffic-new',
+    'page-traffic',
     'metasearch',
     'govuk',
     'government',
