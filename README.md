@@ -20,6 +20,8 @@ Install requirements with:
 
 Run with:
 
+    (venv)$ export ES2_ORIGIN_HOST="http://localhost:9200"
+    (venv)$ export ES5_TARGET_HOST="http://localhost:9206"
     (venv)$ python scripts/bulk_index_es2_to_es5.py
 
 Given pre-existing target indices on an ES5 instance, migrate docs for the equivalent ES2 indices to the new indicies.
@@ -33,6 +35,7 @@ https://github.com/alphagov/rummager/tree/master/config/schema/indexes
 
 Run with:
 
+    (venv)$ export ES2_ORIGIN_HOST="http://localhost:9200"
     (venv)$ python scripts/backup_and_restore.py [--create] [--restore]
 
 A work-in-progress script that uses Elasticsearch's built-in snapshot feature to save backups to an ES data folder.

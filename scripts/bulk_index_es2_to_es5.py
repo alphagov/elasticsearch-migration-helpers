@@ -13,6 +13,7 @@ from elasticsearch5 import Elasticsearch as Elasticsearch5, TransportError as Tr
 from elasticsearch5.helpers import bulk
 from datetime import datetime
 from six import iteritems
+import os
 
 # Using the example indices and doc types from GOV.UK's search API
 # https://github.com/alphagov/rummager/tree/master/config/schema/indexes
@@ -57,9 +58,8 @@ DOC_TYPES = [
     'utaac_decision'
 ]
 
-# TODO: pass Elasticsearch hosts for source and target as script args
-ES2_HOST_PORT = "http://localhost:9200"
-ES5_TARGET_PORT = "http://elastic:changeme@localhost:9202"
+ES2_HOST_PORT = os.getenv('ES2_ORIGIN_HOST', 'http://localhost:9200')
+ES5_TARGET_PORT = os.getenv('ES5_TARGET_HOST', 'http://localhost:9205')
 
 es_client2 = Elasticsearch2([ES2_HOST_PORT])
 es_client5 = Elasticsearch5([ES5_TARGET_PORT])

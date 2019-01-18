@@ -6,6 +6,7 @@ In theory this should work when restoring an ES2 snapshot to an ES5 cluster.
 
 """
 import argparse
+import os
 from datetime import datetime
 
 
@@ -26,8 +27,7 @@ REPOSITORY_DIR = "/tmp"
 # Using the GOV.UK indices as an example
 INDICES = "govuk,government,detailed,metasearch,page-traffic"
 
-# TODO: pass Elasticsearch host as script arg
-ES5_TARGET_PORT = "http://localhost:9202"
+ES5_TARGET_PORT = os.getenv('ES5_TARGET_HOST', 'http://localhost:9205')
 
 es_client5 = Elasticsearch5([ES5_TARGET_PORT])
 
