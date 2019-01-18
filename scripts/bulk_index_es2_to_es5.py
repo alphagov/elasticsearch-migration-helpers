@@ -71,8 +71,10 @@ def count_docs_for_doctype(client, doc_type, index):
 
 def _prepare_docs_for_bulk_insert(docs):
     for doc in docs:
-        yield doc['_source']
-
+        yield {
+            "_id": doc['_id'],
+            "_source": doc['_source'],
+        }
 
 def bulk_index_documents_to_es5(index_name, doc_type, documents):
     try:
