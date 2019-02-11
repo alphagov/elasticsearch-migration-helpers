@@ -54,6 +54,7 @@ DOC_TYPES = [
     'service_manual_guide',
     'service_manual_topic',
     'service_standard_report',
+    'statutory_instrument',
     'tax_tribunal_decision',
     'utaac_decision'
 ]
