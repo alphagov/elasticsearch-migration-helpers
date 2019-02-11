@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-A one-off script to migrate documents from an ES2 index to an ES5 index.
+A one-off script to migrate documents from an ES2 index to an ES6 index.
 
-Requires two Elasticsearch clients: client2 and client5. These use different versions of the python client.
+Requires two Elasticsearch clients: client2 and client6. These use different versions of the python client.
 
 Also requires 'six' for Py2/Py3 compatibility.
 
-client2 fetches a page of docs from the old index, and client5 POSTs them to the new index. Simple!
+client2 fetches a page of docs from the old index, and client6 POSTs them to the new index. Simple!
 """
 from elasticsearch2 import Elasticsearch as Elasticsearch2, TransportError as TransportError2
-from elasticsearch5 import Elasticsearch as Elasticsearch5, TransportError as TransportError5
-from elasticsearch5.helpers import bulk
+from elasticsearch import Elasticsearch as Elasticsearch6, TransportError as TransportError6
+from elasticsearch.helpers import bulk
 from datetime import datetime
 from six import iteritems
 import os
@@ -60,10 +60,10 @@ DOC_TYPES = [
 ]
 
 ES2_HOST_PORT = os.getenv('ES2_ORIGIN_HOST', 'http://localhost:9200')
-ES5_TARGET_PORT = os.getenv('ES5_TARGET_HOST', 'http://localhost:9205')
+ES6_TARGET_PORT = os.getenv('ES6_TARGET_HOST', 'http://localhost:9205')
 
 es_client2 = Elasticsearch2([ES2_HOST_PORT])
-es_client5 = Elasticsearch5([ES5_TARGET_PORT])
+es_client6 = Elasticsearch6([ES6_TARGET_PORT])
 
 
 def count_docs_for_doctype(client, doc_type, index):
@@ -77,35 +77,36 @@ def index_individual_docs(index, doc_type, docs):
             print(result, status_code)
 
 
-def _prepare_docs_for_bulk_insert(docs):
+def _prepare_docs_for_bulk_insert(docs, doc_type):
     for doc in docs:
+        doc['_source']['document_type'] = doc_type
         yield {
             "_id": doc['_id'],
             "_source": doc['_source'],
         }
 
-def bulk_index_documents_to_es5(index_name, doc_type, documents):
+def bulk_index_documents_to_es6(index_name, doc_type, documents):
     try:
         bulk(
-            es_client5,
-            _prepare_docs_for_bulk_insert(documents),
+            es_client6,
+            _prepare_docs_for_bulk_insert(documents, doc_type),
             index=index_name,
-            doc_type=doc_type,
+            doc_type='generic-document',
             chunk_size=100
         )
-    except TransportError5 as e:
+    except TransportError6 as e:
         index_individual_docs(index_name, doc_type, documents)
 
-
-def index_document_to_es5(index_name, doc_type, document):
+def index_document_to_es6(index_name, doc_type, document):
+    document['_source']['document_type'] = doc_type
     try:
-        es_client5.index(
+        es_client6.index(
             index=index_name,
             id=document['_id'],
-            doc_type=doc_type,
+            doc_type='generic-document',
             body=document['_source'])
         return "acknowledged", 200
-    except TransportError5 as e:
+    except TransportError6 as e:
         print(
             "Failed to index the document %s: %s",
             document['_id'], str(e)
@@ -129,6 +130,11 @@ def fetch_documents_from_es2(doc_type, from_=0, page_size=100, index_name='govuk
         )
         return str(e), e.status_code
 
+def index_individual_docs(index, doc_type, docs):
+    for doc in docs:
+        result, status_code = index_document_to_es6(index, doc_type, doc)
+        if status_code != 200:
+            print(result, status_code)
 
 def list_docs_for_each_doctype(index_name):
     es2_doc_counts = {}
@@ -160,8 +166,7 @@ def copy_index(index_name_from, index_name_to):
         while offset <= dcount:
             scroll_id, docs = fetch_documents_from_es2(doc_type, from_=offset, page_size=page_size, index_name=index_name_from, scroll_id=scroll_id)
 
-            print('Indexing documents {} to {} into ES5'.format(offset, offset+page_size))
-            bulk_index_documents_to_es5(index_name_to, doc_type, docs)
+            bulk_index_documents_to_es6(index_name_to, doc_type, docs)
 
             offset += page_size
 
@@ -180,9 +185,9 @@ def main():
     """
     indices = []
     try:
-        indices = [(index, es_client5.indices.get_alias("{}-*".format(index)).keys()[0]) for index in INDICES]
+        indices = [(index, es_client6.indices.get_alias("{}-*".format(index)).keys()[0]) for index in INDICES]
     except KeyError as err:
-        print("Index does not exist in ES5 target host: {}".format(index))
+        print("Index does not exist in ES6 target host: {}".format(index))
     for index_name_from, index_name_to in indices:
         copy_index(index_name_from, index_name_to)
 

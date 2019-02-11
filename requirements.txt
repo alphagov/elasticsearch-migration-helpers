@@ -1,5 +1,5 @@
 # Run pip install -r requirements.txt
 
 elasticsearch2
-elasticsearch5
+elasticsearch
 six
