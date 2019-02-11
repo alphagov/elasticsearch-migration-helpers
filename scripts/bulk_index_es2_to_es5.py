@@ -29,7 +29,7 @@ DOC_TYPES = [
     'aaib_report',
     'asylum_support_decision',
     'best_bet',
-    'business_finance_support',
+    'business_finance_support_scheme',
     'cma_case',
     'contact',
     'countryside_stewardship_grant',
