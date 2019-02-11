@@ -70,6 +70,13 @@ def count_docs_for_doctype(client, doc_type, index):
     return client.count(index=index, doc_type=doc_type)['count']
 
 
+def index_individual_docs(index, doc_type, docs):
+    for doc in docs:
+        result, status_code = index_document_to_es5(index, doc_type, doc)
+        if status_code != 200:
+            print(result, status_code)
+
+
 def _prepare_docs_for_bulk_insert(docs):
     for doc in docs:
         yield {
@@ -86,13 +93,8 @@ def bulk_index_documents_to_es5(index_name, doc_type, documents):
             doc_type=doc_type,
             chunk_size=100
         )
-        return "acknowledged", 200
     except TransportError5 as e:
-        print(
-            "Failed to bulk index the %s documents: %s",
-            doc_type, str(e)
-        )
-        return str(e), e.status_code
+        index_individual_docs(index_name, doc_type, documents)
 
 
 def index_document_to_es5(index_name, doc_type, document):
@@ -111,24 +113,21 @@ def index_document_to_es5(index_name, doc_type, document):
         return str(e), e.status_code
 
 
-def fetch_documents_from_es2(doc_type, from_=0, page_size=100, index_name='govuk'):
+def fetch_documents_from_es2(doc_type, from_=0, page_size=100, index_name='govuk', scroll_id=None):
     try:
-        results = es_client2.search(index_name, doc_type, from_=from_, size=page_size)
+        if scroll_id is None:
+            results = es_client2.search(index_name, doc_type, from_=from_, size=page_size, scroll='2m')
+            scroll_id = results['_scroll_id']
+        else:
+            results = es_client2.scroll(scroll_id=scroll_id, scroll='2m')
         docs = results['hits']['hits']
-        return docs
+        return (scroll_id, docs)
     except TransportError2 as e:
         print(
             "Failed to fetch documents from %s: %s",
             index_name, str(e)
         )
         return str(e), e.status_code
-
-
-def index_individual_docs(index, doc_type, docs):
-    for doc in docs:
-        result, status_code = index_document_to_es5(index, doc_type, doc)
-        if status_code != 200:
-            print(result, status_code)
 
 
 def list_docs_for_each_doctype(index_name):
@@ -141,7 +140,7 @@ def list_docs_for_each_doctype(index_name):
     return es2_doc_counts
 
 
-def copy_index(index_name_from, index_name_to, bulk_index=True):
+def copy_index(index_name_from, index_name_to):
     start = datetime.now()
 
     es2_doc_counts = list_docs_for_each_doctype(index_name_from)
@@ -156,16 +155,13 @@ def copy_index(index_name_from, index_name_to, bulk_index=True):
 
         total += dcount
 
+        scroll_id = None
+
         while offset <= dcount:
-            docs = fetch_documents_from_es2(doc_type, from_=offset, page_size=page_size, index_name=index_name_from)
+            scroll_id, docs = fetch_documents_from_es2(doc_type, from_=offset, page_size=page_size, index_name=index_name_from, scroll_id=scroll_id)
 
             print('Indexing documents {} to {} into ES5'.format(offset, offset+page_size))
-            if bulk_index:
-                # Bulk index docs to ES5
-                bulk_index_documents_to_es5(index_name_to, doc_type, docs)
-            else:
-                # Post individual docs to ES5
-                index_individual_docs(index_name_to, doc_type, docs)
+            bulk_index_documents_to_es5(index_name_to, doc_type, docs)
 
             offset += page_size
 
