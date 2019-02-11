@@ -113,11 +113,15 @@ def index_document_to_es5(index_name, doc_type, document):
         return str(e), e.status_code
 
 
-def fetch_documents_from_es2(doc_type, from_=0, page_size=100, index_name='govuk'):
+def fetch_documents_from_es2(doc_type, from_=0, page_size=100, index_name='govuk', scroll_id=None):
     try:
-        results = es_client2.search(index_name, doc_type, from_=from_, size=page_size)
+        if scroll_id is None:
+            results = es_client2.search(index_name, doc_type, from_=from_, size=page_size, scroll='2m')
+            scroll_id = results['_scroll_id']
+        else:
+            results = es_client2.scroll(scroll_id=scroll_id, scroll='2m')
         docs = results['hits']['hits']
-        return docs
+        return (scroll_id, docs)
     except TransportError2 as e:
         print(
             "Failed to fetch documents from %s: %s",
@@ -151,8 +155,10 @@ def copy_index(index_name_from, index_name_to):
 
         total += dcount
 
+        scroll_id = None
+
         while offset <= dcount:
-            docs = fetch_documents_from_es2(doc_type, from_=offset, page_size=page_size, index_name=index_name_from)
+            scroll_id, docs = fetch_documents_from_es2(doc_type, from_=offset, page_size=page_size, index_name=index_name_from, scroll_id=scroll_id)
 
             print('Indexing documents {} to {} into ES5'.format(offset, offset+page_size))
             bulk_index_documents_to_es5(index_name_to, doc_type, docs)
