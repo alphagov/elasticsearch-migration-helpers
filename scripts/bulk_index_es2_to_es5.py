@@ -146,11 +146,15 @@ def copy_index(index_name_from, index_name_to, bulk_index=True):
 
     es2_doc_counts = list_docs_for_each_doctype(index_name_from)
 
+    total = 0
+
     for doc_type, dcount in iteritems(es2_doc_counts):
         offset = 0
         page_size = 500
 
         print('Preparing to index {} {} document(s) from ES2 {} index'.format(dcount, doc_type, index_name_from))
+
+        total += dcount
 
         while offset <= dcount:
             docs = fetch_documents_from_es2(doc_type, from_=offset, page_size=page_size, index_name=index_name_from)
@@ -165,7 +169,7 @@ def copy_index(index_name_from, index_name_to, bulk_index=True):
 
             offset += page_size
 
-    print('Finished in {} seconds'.format(datetime.now() - start))
+    print('Finished {} documents in {} seconds'.format(total, datetime.now() - start))
 
 
 def main():
