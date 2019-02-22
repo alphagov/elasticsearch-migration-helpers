@@ -59,6 +59,8 @@ DOC_TYPES = [
     'utaac_decision'
 ]
 
+GENERIC_DOC_TYPE = 'generic-document'
+
 ES2_HOST_PORT = os.getenv('ES2_ORIGIN_HOST', 'http://localhost:9200')
 ES5_TARGET_PORT = os.getenv('ES5_TARGET_HOST', 'http://localhost:9205')
 
@@ -70,9 +72,9 @@ def count_docs_for_doctype(client, doc_type, index):
     return client.count(index=index, doc_type=doc_type)['count']
 
 
-def index_individual_docs(index, doc_type, docs):
+def index_individual_docs(index, docs):
     for doc in docs:
-        result, status_code = index_document_to_es5(index, doc_type, doc)
+        result, status_code = index_document_to_es5(index, doc)
         if status_code != 200:
             print(result, status_code)
 
@@ -84,25 +86,25 @@ def _prepare_docs_for_bulk_insert(docs):
             "_source": doc['_source'],
         }
 
-def bulk_index_documents_to_es5(index_name, doc_type, documents):
+def bulk_index_documents_to_es5(index_name, documents):
     try:
         bulk(
             es_client5,
             _prepare_docs_for_bulk_insert(documents),
             index=index_name,
-            doc_type=doc_type,
+            doc_type=GENERIC_DOC_TYPE,
             chunk_size=100
         )
     except TransportError5 as e:
-        index_individual_docs(index_name, doc_type, documents)
+        index_individual_docs(index_name, documents)
 
 
-def index_document_to_es5(index_name, doc_type, document):
+def index_document_to_es5(index_name, document):
     try:
         es_client5.index(
             index=index_name,
             id=document['_id'],
-            doc_type=doc_type,
+            doc_type=GENERIC_DOC_TYPE,
             body=document['_source'])
         return "acknowledged", 200
     except TransportError5 as e:
@@ -160,8 +162,11 @@ def copy_index(index_name_from, index_name_to):
         while offset <= dcount:
             scroll_id, docs = fetch_documents_from_es2(doc_type, from_=offset, page_size=page_size, index_name=index_name_from, scroll_id=scroll_id)
 
+            for doc in docs:
+                doc['_source']['document_type'] = doc_type
+
             print('Indexing documents {} to {} into ES5'.format(offset, offset+page_size))
-            bulk_index_documents_to_es5(index_name_to, doc_type, docs)
+            bulk_index_documents_to_es5(index_name_to, docs)
 
             offset += page_size
 
