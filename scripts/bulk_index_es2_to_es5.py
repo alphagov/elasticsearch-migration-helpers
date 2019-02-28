@@ -151,7 +151,7 @@ def copy_index(index_name_from, index_name_to):
 
     for doc_type, dcount in iteritems(es2_doc_counts):
         offset = 0
-        page_size = 500
+        page_size = 250
 
         print('Preparing to index {} {} document(s) from ES2 {} index'.format(dcount, doc_type, index_name_from))
 
