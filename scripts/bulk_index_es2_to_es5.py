@@ -13,6 +13,7 @@ from elasticsearch5 import Elasticsearch as Elasticsearch5, TransportError as Tr
 from elasticsearch5.helpers import bulk
 from datetime import datetime
 from six import iteritems
+from time import sleep
 import os
 
 # Using the example indices and doc types from GOV.UK's search API
@@ -169,6 +170,9 @@ def copy_index(index_name_from, index_name_to):
             bulk_index_documents_to_es5(index_name_to, docs)
 
             offset += page_size
+
+        print('Sleeping for 5s...')
+        sleep(5)
 
     print('Finished {} documents in {} seconds'.format(total, datetime.now() - start))
 
