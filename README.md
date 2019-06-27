@@ -1,5 +1,5 @@
 # elasticsearch-migration-helpers
-Python scripts to ease the transition between ES2 and ES5
+Python scripts to ease the transition from ES2 to ES5 and then to ES6
 
 Compatible with Python 2 and Python 3.
 
@@ -15,7 +15,17 @@ Install requirements with:
     
    
 ## Scripts
- 
+
+### Copy ES5 metasearch to ES6
+
+Run with:
+
+    (venv)$ export ES5_ORIGIN_HOST="http://localhost:9200"
+    (venv)$ export ES6_TARGET_HOST="http://localhost:9201"
+    (venv)$ python scripts/copy_es5_metasearch_to_es6.py
+
+This script is like `bulk_index_es2_to_es5.py` but only copies the metasearch index.
+
 ### Bulk migration of documents from ES2 to ES5
 
 Run with:
@@ -42,7 +52,7 @@ A work-in-progress script that uses Elasticsearch's built-in snapshot feature to
 
 ## Setting up local Elasticsearch instances
 
-If you want to test the scripts locally, you'll need an ES2 and and ES5 instance.
+If you want to test the scripts locally, you'll need some of ES2, ES5, and ES6 running.
 
 Below is an example setup with ES5 running in a Docker container, and ES2 running inside a Vagrant virtual machine.
 

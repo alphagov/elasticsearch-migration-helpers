@@ -2,4 +2,5 @@
 
 elasticsearch2
 elasticsearch5
+elasticsearch6
 six
